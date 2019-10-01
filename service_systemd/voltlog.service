@@ -1,0 +1,16 @@
+[Unit]
+Description=LogEnvironment_Sensors
+After=multi-user.target
+#After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/pi/code/raspi-monitoring/main_websocket_sounds.py
+WorkingDirectory=/home/pi/code/raspi-monitoring/
+StandardOutput=syslog
+StandardError=syslog
+Restart=always
+User=pi
+#Type=idle
+
+[Install]
+WantedBy=multi-user.target
