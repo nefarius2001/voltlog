@@ -13,10 +13,13 @@ import tzlocal
 import time
 import csv
 import Adafruit_ADS1x15
+import glob
+import os
 
 #fakesamples = 2*60*24*10
 fakesamples = 0
-sample_interval_seconds = 10
+sample_interval_seconds = 2
+backup_interval_seconds = 60
 
 adc = Adafruit_ADS1x15.ADS1115()
 GAIN = 1
@@ -77,25 +80,6 @@ def data_to_html(filename_to_save, samples_to_save):
 		myfile.write("\n</body>\n</html>\n")
 	
 	
-#from openpyxl import Workbook
-#def data_to_xlsx(filename_to_save, samples_to_save):
-#	book = XLSXBook()
-#	sheet1 = book.add_sheet("data")
-#	wb = Workbook()
-#	ws = wb.active
-#	ws.title = "data"
-#	r = 2
-#	for sample_to_save in samples_to_save:
-#				sheet1.append_row(
-#					sample_to_save['timestring'],
-#					sample_to_save['values'][0],
-#					sample_to_save['values'][1],
-#					sample_to_save['values'][2],
-#					sample_to_save['values'][3])
-#				r = r +1
-#	book.finalize(to_file=filename_to_save)	
-#	
-#	wb.save(filename_to_save)
 	
 def data_to_xlsx(filename_to_save, samples_to_save):
 	workbook   = xlsxwriter.Workbook(filename_to_save, {'constant_memory': True})
@@ -117,6 +101,12 @@ def data_to_xlsx(filename_to_save, samples_to_save):
 				r = r +1
 	workbook.close()
 	
+def filename_backup():
+    amount = 0
+    for i in glob.glob(os.getcwd() + "/logs/backups/*"):
+        amount += 1
+    p = "./logs/backups/data_" + str(amount + 1) 
+    return p
 	
 filename=getTimestring()
 filename = filename[:19]
@@ -127,6 +117,7 @@ print(filename)
 
 
 samples = []
+t_backup = time.time()
 
 if(fakesamples>0):
 	print('generate fake test data')
@@ -138,30 +129,30 @@ while True:
 	print('main loop')
 	t_start = time.time()
 	try:
-		a = time.time()
+		t = time.time()
 		print('try')
 		sample = readNewSample()
 		print('sample')
 		print(sample)
 		samples.append(sample)
 		#print(samples)
-		b = time.time()
-		print('sample in {:}s'.format(b-a))
-		print('save csv')
-		data_to_csv ("./logs/" + filename + ".txt", samples)
-		c = time.time()
-		print('done in {:}s'.format(c-b))
+		print('sample in {:}s'.format(time.time()-t))
+		if((time.time() - t_backup) > backup_interval_seconds):
+			print('save csv')
+			t = time.time()
+			data_to_csv (filename_backup() + ".txt", samples)
+			t_backup = time.time()
+			print('done in {:}s'.format(time.time() - t))
 		print('save html')
-		data_to_html("./logs/" + filename + ".html", samples)
-		d = time.time()
-		print('done in {:}s'.format(d-c))
-		#print('save xlsx')
-		#data_to_xlsx("./logs/" + filename + ".xlsx", samples)
-		#e = time.time()
-		#print('done in {:}s'.format(e-d))
-		
 		t = time.time()
-		seconds_to_sleep = sample_interval_seconds - (t - t_start)
+		data_to_html("./logs/" + filename + ".html", samples)
+		print('done in {:}s'.format(time.time() - t))
+		#print('save xlsx')
+		#t = time.time()
+		#data_to_xlsx("./logs/" + filename + ".xlsx", samples)
+		#print('done in {:}s'.format(time.time() - t))
+		
+		seconds_to_sleep = sample_interval_seconds - (time.time() - t_start)
 		print('sleep ' + str(seconds_to_sleep))
 		time.sleep(seconds_to_sleep)
 	except Exception as e:
