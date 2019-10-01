@@ -1,13 +1,24 @@
 #!/usr/bin/env python3
 
+from pip_ensure_installed import pip_ensure_installed
+pip_ensure_installed("xlsxlite")
+pip_ensure_installed("xlsxwriter")
+pip_ensure_installed("Adafruit_ADS1x15")
+#from xlsxlite.writer import XLSXBook
+import xlsxwriter
+
 import random
 import datetime
 import tzlocal
 import time
 import csv
-#import Adafruit_ADS1x15
+import Adafruit_ADS1x15
 
-#adc = Adafruit_7ADS1x15.ADS1115()
+#fakesamples = 2*60*24*10
+fakesamples = 0
+sample_interval_seconds = 10
+
+adc = Adafruit_ADS1x15.ADS1115()
 GAIN = 1
 
 data = []
@@ -17,12 +28,17 @@ def getTimestring():
 	
 def readNewSample():
 	sample = {}
-	sample['timestring'] = 	str(datetime.datetime.now(tzlocal.get_localzone()))
+	#sample['timestring'] = 	str(datetime.datetime.now(tzlocal.get_localzone()))
+	sample['timestring'] = 	datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+	sample['datetime'] = 	datetime.datetime.now()
 	
 	values = []
 	for i in range(4):
-		values.append(random.randint(0,20))
-		#values.append(adc.read_adc(i, gain=GAIN)*4.096/32768.0)
+		if(fakesamples>0):
+			v = random.randint(0,20)
+		else:
+			v = adc.read_adc(i, gain=GAIN)*4.096/32768.0
+		values.append(v)
 		
 	sample['values'] = values
 	return sample
@@ -40,35 +56,66 @@ def data_to_csv(filename_to_save, samples_to_save):
 				])
 				
 				#["value-0"], entry["value-1"], entry["value-2"], entry["value-3"], entry["year"], entry["month"], entry["day"], entry["hour"], entry["minute"]])
+def tablevalue(myfile,s):
+	myfile.write("<td>")
+	myfile.write(str(s))
+	myfile.write("</td>")
 
-
-def data_to_html(filename_to_save, samples_to_save):	
+def data_to_html(filename_to_save, samples_to_save):
 	with open(filename_to_save, mode='w') as myfile:
 		myfile.write("<!DOCTYPE html>\n<html>\n<head>\n<style>\ntable, th, td {border: 1px solid black;}\n</style>\n</head>\n<body>\n<h1>My First Heading</h1>\n")
 		myfile.write('<table style="width:100%">')
 		for sample_to_save in samples_to_save:
 				myfile.write("<tr>")
-				myfile.write("<td>")
-				myfile.write(str(sample_to_save['timestring']))
-				myfile.write("</td>")
-				myfile.write(str(sample_to_save['values'][0]))
-				myfile.write("</td>")
-				myfile.write("<td>")
-				myfile.write(str(sample_to_save['values'][1]))
-				myfile.write("</td>")
-				myfile.write("<td>")
-				myfile.write(str(sample_to_save['values'][2]))
-				myfile.write("</td>")
-				myfile.write("<td>")
-				myfile.write(str(sample_to_save['values'][3]))
-				myfile.write("</td>")
+				tablevalue(myfile, sample_to_save['timestring'])
+				tablevalue(myfile, sample_to_save['values'][0])
+				tablevalue(myfile, sample_to_save['values'][1])
+				tablevalue(myfile, sample_to_save['values'][2])
+				tablevalue(myfile, sample_to_save['values'][3])
 				myfile.write("</tr>\n")
 		myfile.write("</table>")
 		myfile.write("\n</body>\n</html>\n")
 	
 	
+#from openpyxl import Workbook
+#def data_to_xlsx(filename_to_save, samples_to_save):
+#	book = XLSXBook()
+#	sheet1 = book.add_sheet("data")
+#	wb = Workbook()
+#	ws = wb.active
+#	ws.title = "data"
+#	r = 2
+#	for sample_to_save in samples_to_save:
+#				sheet1.append_row(
+#					sample_to_save['timestring'],
+#					sample_to_save['values'][0],
+#					sample_to_save['values'][1],
+#					sample_to_save['values'][2],
+#					sample_to_save['values'][3])
+#				r = r +1
+#	book.finalize(to_file=filename_to_save)	
+#	
+#	wb.save(filename_to_save)
 	
-	
+def data_to_xlsx(filename_to_save, samples_to_save):
+	workbook   = xlsxwriter.Workbook(filename_to_save, {'constant_memory': True})
+	worksheet  = workbook.add_worksheet("data")
+	r = 0
+	worksheet.write(r, 0, 'Zeit')
+	worksheet.write(r, 1, 'value1')
+	worksheet.write(r, 2, 'value2')
+	worksheet.write(r, 3, 'value3')
+	worksheet.write(r, 4, 'value4')
+	r = 1
+	date_format = workbook.add_format({'num_format': 'dd/mm/yy hh:mm:ss','align': 'left'})
+	for sample_to_save in samples_to_save:
+				worksheet.write_datetime(r, 0, sample_to_save['datetime'], date_format)
+				worksheet.write(r, 1, sample_to_save['values'][0])
+				worksheet.write(r, 2, sample_to_save['values'][1])
+				worksheet.write(r, 3, sample_to_save['values'][2])
+				worksheet.write(r, 4, sample_to_save['values'][3])
+				r = r +1
+	workbook.close()
 	
 	
 filename=getTimestring()
@@ -78,23 +125,49 @@ filename = filename.replace(':','-')
 #filename = filename + ".txt"
 print(filename)
 
-samples = []
-while True:
-	print('sleep')
-	time.sleep(1)
 
+samples = []
+
+if(fakesamples>0):
+	print('generate fake test data')
+	for x in range(fakesamples):
+			sample = readNewSample()
+			samples.append(sample)
+
+while True:
+	print('main loop')
+	t_start = time.time()
 	try:
+		a = time.time()
 		print('try')
 		sample = readNewSample()
 		print('sample')
 		print(sample)
 		samples.append(sample)
-		print(samples)
-		print('save')
+		#print(samples)
+		b = time.time()
+		print('sample in {:}s'.format(b-a))
+		print('save csv')
 		data_to_csv ("./logs/" + filename + ".txt", samples)
+		c = time.time()
+		print('done in {:}s'.format(c-b))
+		print('save html')
 		data_to_html("./logs/" + filename + ".html", samples)
-	except:
-		raise 
-		print('except')
+		d = time.time()
+		print('done in {:}s'.format(d-c))
+		#print('save xlsx')
+		#data_to_xlsx("./logs/" + filename + ".xlsx", samples)
+		#e = time.time()
+		#print('done in {:}s'.format(e-d))
+		
+		t = time.time()
+		seconds_to_sleep = sample_interval_seconds - (t - t_start)
+		print('sleep ' + str(seconds_to_sleep))
+		time.sleep(seconds_to_sleep)
+	except Exception as e:
+		print('Exception: '+ str(e))
+		#raise 
+		print('sleep 3')
+		time.sleep(3)
 		pass
-	print('done')
+	

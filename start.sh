@@ -12,5 +12,4 @@ echo
 echo done
 echo 
 
-
-echo systemctl status voltlog.service
+systemctl status voltlog.service

@@ -2,10 +2,12 @@
 
 
 echo copy services and reload
-cd ~/code/raspi-monitoring/service_systemd
+cd ~/code/voltlog/service_systemd
 sudo chmod 644 ./*.service
 sudo cp        ./*.service /lib/systemd/system/
 sudo systemctl daemon-reload
+
+systemctl status voltlog.service
 
 #echo #manual start/stop:
 #echo sudo systemctl start logEnvironment_Sensors.service

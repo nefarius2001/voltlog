@@ -1,11 +1,11 @@
 [Unit]
-Description=LogEnvironment_Sensors
+Description=voltlog
 After=multi-user.target
 #After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 /home/pi/code/raspi-monitoring/main_websocket_sounds.py
-WorkingDirectory=/home/pi/code/raspi-monitoring/
+ExecStart=/usr/bin/python3 /home/pi/code/voltlog/voltlog_to_html.py
+WorkingDirectory=/home/pi/code/voltlog/
 StandardOutput=syslog
 StandardError=syslog
 Restart=always
