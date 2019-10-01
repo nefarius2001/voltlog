@@ -94,7 +94,7 @@ while True:
 		data_to_csv ("./logs/" + filename + ".txt", samples)
 		data_to_html("./logs/" + filename + ".html", samples)
 	except:
-		raise
+		raise 
 		print('except')
 		pass
 	print('done')
