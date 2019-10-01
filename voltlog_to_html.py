@@ -44,14 +44,8 @@ def data_to_csv(filename_to_save, samples_to_save):
 
 def data_to_html(filename_to_save, samples_to_save):	
 	with open(filename_to_save, mode='w') as myfile:
-		myfile.write("<!DOCTYPE html>\n<html>
-<head>
-<style>
-"table, th, td {border: 1px solid black;}"
-</style>"
-</head>
-\n<body>\n<h1>My First Heading</h1>\n")
-		myfile.write("<<table style="width:100%">")
+		myfile.write("<!DOCTYPE html>\n<html>\n<head>\n<style>\ntable, th, td {border: 1px solid black;}\n</style>\n</head>\n<body>\n<h1>My First Heading</h1>\n")
+		myfile.write('<table style="width:100%">')
 		for sample_to_save in samples_to_save:
 				myfile.write("<tr>")
 				myfile.write("<td>")
@@ -97,8 +91,8 @@ while True:
 		samples.append(sample)
 		print(samples)
 		print('save')
-		data_to_csv (filename + ".txt", samples)
-		data_to_html(filename + ".html", samples)
+		data_to_csv ("./logs/" + filename + ".txt", samples)
+		data_to_html("./logs/" + filename + ".html", samples)
 	except:
 		raise
 		print('except')
