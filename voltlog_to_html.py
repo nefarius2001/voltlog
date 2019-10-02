@@ -4,6 +4,7 @@ from pip_ensure_installed import pip_ensure_installed
 pip_ensure_installed("xlsxlite")
 pip_ensure_installed("xlsxwriter")
 pip_ensure_installed("Adafruit_ADS1x15")
+pip_ensure_installed("tzlocal")
 #from xlsxlite.writer import XLSXBook
 import xlsxwriter
 
@@ -18,8 +19,8 @@ import os
 
 #fakesamples = 2*60*24*10
 fakesamples = 0
-sample_interval_seconds = 2
-backup_interval_seconds = 60
+sample_interval_seconds = 30
+backup_interval_seconds = 60*20
 
 adc = Adafruit_ADS1x15.ADS1115()
 GAIN = 1
@@ -35,7 +36,7 @@ def readNewSample():
 	sample['timestring'] = 	datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 	sample['datetime'] = 	datetime.datetime.now()
 	
-	values = []
+	values = [] 
 	for i in range(4):
 		if(fakesamples>0):
 			v = random.randint(0,20)
